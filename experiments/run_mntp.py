@@ -246,6 +246,14 @@ class ModelArguments:
                 "--config_overrides can't be used in combination with --config_name or --model_name_or_path"
             )
 
+@dataclass
+class ExtendedTrainingArguments(TrainingArguments):
+    hub_push_branch: Optional[str] = field(
+        default="main",  # Default branch is "main"
+        metadata={
+            "help": "The name of the branch to push the model to on the Hugging Face Hub."
+        },
+    )
 
 @dataclass
 class DataTrainingArguments:
@@ -454,12 +462,27 @@ class MNTPTrainer(Trainer):
         os.makedirs(output_dir, exist_ok=True)
         logger.info(f"Saving model checkpoint to {output_dir}")
 
-        # model organization is MODEL_TYPEBiForMNTP.model -> MODEL_TYPELBiModel, we have to save the inner model, handled by save_peft_model function of the outer model
+        # Save the PEFT model (your main requirement)
         self.model.save_peft_model(output_dir)
-        self.tokenizer.save_pretrained(output_dir)
 
-        # Good practice: save your training arguments together with the trained model
+        # Save tokenizer and training arguments
+        self.tokenizer.save_pretrained(output_dir)
         torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+        # Check if metrics exist, save them to the output directory, and push them to the hub
+        metric_files = ["trainer_state.json", "eval_results.json"]
+        for metric_file in metric_files:
+            metric_path = os.path.join(self.args.output_dir, metric_file)
+            if os.path.exists(metric_path):
+                logger.info(f"Pushing {metric_file} to the Hub.")
+                # Push metrics file to the hub explicitly
+                if self.args.push_to_hub:
+                    self.repo.push_to_hub(
+                        commit_message=f"Pushed {metric_file} during model save",
+                        blocking=True,
+                    )
+
+        logger.info(f"Checkpoint and metrics saved to {output_dir}")
 
 
 def main():
@@ -468,7 +491,7 @@ def main():
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
     parser = HfArgumentParser(
-        (ModelArguments, DataTrainingArguments, TrainingArguments, CustomArguments)
+        (ModelArguments, DataTrainingArguments, ExtendedTrainingArguments, CustomArguments)
     )
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
@@ -990,8 +1013,11 @@ def main():
             kwargs["dataset"] = data_args.dataset_name
 
     if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-
+        trainer.push_to_hub(
+            **kwargs,
+            repo_name=training_args.hub_model_id,  # Extract repo name from hub_model_id
+            branch=training_args.hub_push_branch  # Use hub_push_branch from the arguments
+        )
 
 if __name__ == "__main__":
     main()

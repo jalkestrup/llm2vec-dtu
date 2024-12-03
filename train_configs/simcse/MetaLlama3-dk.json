@@ -1,6 +1,6 @@
 {
     "model_name_or_path": "AI-Sweden-Models/Llama-3-8B-instruct",
-    "peft_model_name_or_path": "jealk/llm2vec-da",
+    "peft_model_name_or_path": "jealk/llm2vec-da-mntp",
     "simcse_dropout": 0.3,
     "bidirectional": true,
     "pooling_mode": "mean",
@@ -15,14 +15,15 @@
     "disable_tqdm": false,
     "max_seq_length": 128,
     "overwrite_output_dir": true,
-    "output_dir": "output/mntp-simcse/Meta-Llama-3-8B-swe-Instruct-dk-simcse",
-    "logging_steps": 50,
-    "save_steps": 200,
+    "output_dir": "output/mntp-simcse/Meta-Llama-3-8B-swe-Instruct-dk-simcse-long",
+    "logging_steps": 250,
+    "save_steps": 500,
     "save_only_model": true,
-    "stop_after_n_steps": 1000,
+    "stop_after_n_steps": 3000,
     "lora_r": 16,
     "gradient_checkpointing": true,
     "torch_dtype": "bfloat16",
     "attn_implementation": "flash_attention_2",
-    "seed": 42
+    "seed": 42,
+    "hub_model_id": "jealk/llm2vec-da-mntp-simcse"
 }

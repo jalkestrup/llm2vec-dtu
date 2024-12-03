@@ -141,6 +141,19 @@ class ModelArguments:
         },
     )
 
+    model_revision: Optional[str] = field(
+        default="main",
+        metadata={
+            "help": (
+                "The specific model version to use (can be a branch name, tag name, or commit id)."
+            )
+        },
+    )
+
+    hub_branch: Optional[str] = field(
+        default="main",
+        metadata={"help": "The branch to push the model to on the Hugging Face Hub."}
+    )
 
 @dataclass
 class DataTrainingArguments:
@@ -353,6 +366,7 @@ def main():
         torch_dtype=torch_dtype,
         attn_implementation=model_args.attn_implementation,
         attention_dropout=custom_args.simcse_dropout,
+        revision=model_args.model_revision
     )
 
     # model organization is LLM2VecModel.model -> HF Model, we have to apply PEFT to the inner model
