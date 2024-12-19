@@ -168,6 +168,12 @@ class DataTrainingArguments:
     dataset_file_path: Optional[str] = field(
         default=None, metadata={"help": "The input training data file or folder."}
     )
+    dataset_config_name: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "The configuration name of the dataset to use (via the datasets library)."
+        },
+    )
     # TODO: implement this
     max_train_samples: Optional[int] = field(
         default=None,
@@ -341,6 +347,8 @@ def main():
         split="train",
         file_path=data_args.dataset_file_path,
     )
+
+    print(f"Number of training examples: {len(train_dataset)}")
 
     train_examples = [
         train_dataset[i]
